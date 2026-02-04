@@ -1,0 +1,8 @@
+{
+	"name": "tempo-examples",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"check:types": "pnpm -r run check:types"
+	}
+}
