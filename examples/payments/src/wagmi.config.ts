@@ -5,6 +5,7 @@ import { withFeePayer } from 'viem/tempo'
 import { createConfig, http, webSocket } from 'wagmi'
 import { KeyManager, webAuthn } from 'wagmi/tempo'
 
+export const pathUsd = '0x20c0000000000000000000000000000000000000'
 export const alphaUsd = '0x20c0000000000000000000000000000000000001'
 export const betaUsd = '0x20c0000000000000000000000000000000000002'
 
