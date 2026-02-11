@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { formatUnits, pad, parseUnits, stringToHex } from 'viem'
 import {
   useAccount,
@@ -7,7 +8,7 @@ import {
   useWatchBlockNumber,
 } from 'wagmi'
 import { Hooks } from 'wagmi/tempo'
-import { alphaUsd, betaUsd, sponsorAccount } from './wagmi.config'
+import { alphaUsd, betaUsd, pathUsd, sponsorAccount } from './wagmi.config'
 
 export function App() {
   const account = useAccount()
@@ -189,6 +190,10 @@ export function FundAccount() {
 }
 
 export function SendPayment() {
+  const [feePayment, setFeePayment] = useState<
+    'token' | 'sponsor-relay' | 'sponsor-local'
+  >('token')
+
   const sendPayment = Hooks.token.useTransferSync()
   const metadata = Hooks.token.useGetMetadata({
     token: alphaUsd,
@@ -204,19 +209,21 @@ export function SendPayment() {
         const recipient = (formData.get('recipient') ||
           '0x0000000000000000000000000000000000000000') as `0x${string}`
         const memo = formData.get('memo') as string
-        const feePayment = formData.get('feePayment') as
-          | 'relay'
-          | 'direct'
-          | 'alphaUsd'
-          | 'betaUsd'
 
         const [feePayer, feeToken] = (() => {
-          if (feePayment === 'alphaUsd') return [undefined, alphaUsd] as const
-          if (feePayment === 'betaUsd') return [undefined, betaUsd] as const
-          if (feePayment === 'relay') return [true, undefined] as const
-          if (feePayment === 'direct')
+          if (feePayment === 'sponsor-relay')
+            return [true, undefined] as const
+          if (feePayment === 'sponsor-local')
             return [sponsorAccount, undefined] as const
-          throw new Error('invalid option')
+
+          const selectedFeeToken = formData.get('feeToken') as string
+          const feeTokenAddress =
+            selectedFeeToken === 'pathUsd'
+              ? pathUsd
+              : selectedFeeToken === 'betaUsd'
+                ? betaUsd
+                : alphaUsd
+          return [undefined, feeTokenAddress] as const
         })()
 
         sendPayment.mutate({
@@ -241,11 +248,27 @@ export function SendPayment() {
 
       <div>
         <label htmlFor="feePayment">Fee Payment</label>
-        <select name="feePayment">
-          <option value="relay">Sponsored (via Relay)</option>
-          <option value="direct">Sponsored (via Local Sponsor)</option>
-          <option value="alphaUsd">Alpha USD</option>
-          <option value="betaUsd">Beta USD</option>
+        <select
+          name="feePayment"
+          value={feePayment}
+          onChange={(e) =>
+            setFeePayment(
+              e.target.value as 'token' | 'sponsor-relay' | 'sponsor-local',
+            )
+          }
+        >
+          <option value="token">Pay with Token</option>
+          <option value="sponsor-relay">Sponsored (via Relay)</option>
+          <option value="sponsor-local">Sponsored (via Local Sponsor)</option>
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="feeToken">Fee Token</label>
+        <select name="feeToken" disabled={feePayment !== 'token'}>
+          <option value="pathUsd">PathUSD</option>
+          <option value="alphaUsd">AlphaUSD</option>
+          <option value="betaUsd">BetaUSD</option>
         </select>
       </div>
 
