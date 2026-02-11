@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { formatUnits, pad, parseUnits, stringToHex } from 'viem'
 import {
   useAccount,
@@ -190,10 +189,6 @@ export function FundAccount() {
 }
 
 export function SendPayment() {
-  const [feePayment, setFeePayment] = useState<
-    'token' | 'sponsor-relay' | 'sponsor-local'
-  >('token')
-
   const sendPayment = Hooks.token.useTransferSync()
   const metadata = Hooks.token.useGetMetadata({
     token: alphaUsd,
@@ -209,6 +204,10 @@ export function SendPayment() {
         const recipient = (formData.get('recipient') ||
           '0x0000000000000000000000000000000000000000') as `0x${string}`
         const memo = formData.get('memo') as string
+        const feePayment = formData.get('feePayment') as
+          | 'token'
+          | 'sponsor-relay'
+          | 'sponsor-local'
 
         const [feePayer, feeToken] = (() => {
           if (feePayment === 'sponsor-relay')
@@ -250,12 +249,14 @@ export function SendPayment() {
         <label htmlFor="feePayment">Fee Payment</label>
         <select
           name="feePayment"
-          value={feePayment}
-          onChange={(e) =>
-            setFeePayment(
-              e.target.value as 'token' | 'sponsor-relay' | 'sponsor-local',
-            )
-          }
+          defaultValue="token"
+          onChange={(e) => {
+            const feeTokenSelect = e.target.form?.elements.namedItem(
+              'feeToken',
+            ) as HTMLSelectElement
+            if (feeTokenSelect)
+              feeTokenSelect.disabled = e.target.value !== 'token'
+          }}
         >
           <option value="token">Pay with Token</option>
           <option value="sponsor-relay">Sponsored (via Relay)</option>
@@ -265,7 +266,7 @@ export function SendPayment() {
 
       <div>
         <label htmlFor="feeToken">Fee Token</label>
-        <select name="feeToken" disabled={feePayment !== 'token'}>
+        <select name="feeToken">
           <option value="pathUsd">PathUSD</option>
           <option value="alphaUsd">AlphaUSD</option>
           <option value="betaUsd">BetaUSD</option>
