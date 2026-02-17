@@ -10,7 +10,7 @@ export default {
       chain: tempoModerato.extend({ feeToken: alphaUsd }),
       path: '/fee-payer',
       transport: http(
-        'https://rpc.testnet.tempo.xyz?supersecretargument=pleasedonotusemeinprod',
+        'https://rpc.moderato.tempo.xyz',
       ),
     }).fetch(request)
   },
